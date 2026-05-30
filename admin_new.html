@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MoneyPlu$ Admin</title>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, set, get, update, remove, onValue }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey:            "AIzaSyAzdAtRTQO26-HSs72thRmDaGOeJrlvez4",
+    authDomain:        "ali001-31d56.firebaseapp.com",
+    databaseURL:       "https://ali001-31d56-default-rtdb.firebaseio.com",
+    projectId:         "ali001-31d56",
+    storageBucket:     "ali001-31d56.firebasestorage.app",
+    messagingSenderId: "433793508322",
+    appId:             "1:433793508322:web:6348c8c99eb27ec6ae0fbb"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+  window._db=db; window._dbRef=ref; window._dbGet=get;
+  window._dbSet=set; window._dbUpd=update; window._dbRem=remove;
+  window._dbVal=onValue; window._firebaseReady=true;
+  document.dispatchEvent(new Event("firebaseReady"));
+</script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060A12;--surface:#0C1320;--card:#111825;
+  --border:rgba(100,180,255,.12);--border2:rgba(100,180,255,.22);
+  --accent:#3DB8F5;--gold:#F5C518;--green:#1FCBA0;--red:#FF4D6D;--purple:#8B5CF6;
+  --text:#E6F2FF;--sub:#8AAAC8;--muted:#4A6A88;
+}
+body{background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;min-height:100vh}
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.login-card{background:var(--card);border:1px solid var(--border2);border-radius:24px;padding:40px 32px;width:100%;max-width:380px;text-align:center}
+.login-logo{font-size:28px;font-weight:800;margin-bottom:8px}
+.login-logo span{color:var(--gold)}
+.login-sub{color:var(--sub);font-size:14px;margin-bottom:28px}
+.login-inp{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;color:var(--text);font-size:16px;outline:none;font-family:system-ui;margin-bottom:14px;transition:.2s}
+.login-inp:focus{border-color:var(--accent)}
+.login-inp::placeholder{color:var(--muted)}
+.login-btn{width:100%;background:linear-gradient(135deg,var(--accent),#6C3CE1);border:none;color:#fff;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:system-ui}
+.login-err{color:var(--red);font-size:13px;margin-top:10px}
+.app{display:none;min-height:100vh}
+.sidebar{position:fixed;top:0;left:0;width:240px;height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;z-index:100;overflow-y:auto}
+.sb-logo{font-size:20px;font-weight:800;padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:10px}
+.sb-logo span{color:var(--gold)}
+.sb-item{display:flex;align-items:center;gap:10px;padding:12px 20px;cursor:pointer;transition:.2s;font-size:14px;font-weight:500;color:var(--sub)}
+.sb-item:hover{background:rgba(61,184,245,.07);color:var(--text)}
+.sb-item.on{background:rgba(61,184,245,.1);color:var(--accent);border-right:3px solid var(--accent)}
+.sb-icon{font-size:18px;width:24px;text-align:center}
+.sb-section{padding:16px 20px 6px;font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;font-weight:600}
+.main{margin-left:240px;padding:24px;min-height:100vh}
+.page{display:none}.page.on{display:block}
+.page-title{font-size:24px;font-weight:800;margin-bottom:6px}
+.page-sub{color:var(--sub);font-size:14px;margin-bottom:24px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px}
+.stat-card-lbl{font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;font-weight:600}
+.stat-card-val{font-size:26px;font-weight:800}
+.stat-card-val.g{color:var(--green)}.stat-card-val.a{color:var(--accent)}.stat-card-val.gold{color:var(--gold)}.stat-card-val.r{color:var(--red)}
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;margin-bottom:20px}
+.table-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.table-title{font-size:15px;font-weight:700}
+.search-inp{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:7px 12px;color:var(--text);font-size:12px;outline:none;font-family:system-ui;width:180px}
+.search-inp::placeholder{color:var(--muted)}
+table{width:100%;border-collapse:collapse}
+th{padding:10px 14px;text-align:left;font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;font-weight:600;border-bottom:1px solid var(--border);background:rgba(0,0,0,.2)}
+td{padding:11px 14px;font-size:12px;border-bottom:1px solid rgba(100,180,255,.05)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(61,184,245,.03)}
+.tbl-scroll{overflow-x:auto}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge.green{background:rgba(31,203,160,.12);color:var(--green)}
+.badge.red{background:rgba(255,77,109,.12);color:var(--red)}
+.badge.gold{background:rgba(245,197,24,.12);color:var(--gold)}
+.badge.blue{background:rgba(61,184,245,.12);color:var(--accent)}
+.btn{padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:system-ui;transition:.2s}
+.btn:hover{opacity:.85;transform:translateY(-1px)}
+.btn-sm{padding:4px 9px;font-size:10px}
+.btn-primary{background:var(--accent);color:var(--bg)}
+.btn-danger{background:var(--red);color:#fff}
+.btn-success{background:var(--green);color:#fff}
+.btn-warning{background:var(--gold);color:var(--bg)}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--sub)}
+.btn-purple{background:var(--purple);color:#fff}
+.btn-row{display:flex;gap:5px;flex-wrap:wrap}
+.settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.set-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px}
+.set-card-title{font-size:15px;font-weight:700;margin-bottom:14px}
+.set-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.set-row:last-child{border-bottom:none}
+.set-lbl{font-size:13px;color:var(--sub)}
+.inp-inline{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:13px;outline:none;width:85px;font-family:system-ui}
+.inp-inline:focus{border-color:var(--accent)}
+.toggle{position:relative;width:40px;height:22px;cursor:pointer;display:inline-block}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--muted);border-radius:30px;transition:.3s}
+.toggle-slider:before{content:"";position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:3px;left:3px;transition:.3s}
+.toggle input:checked+.toggle-slider{background:var(--green)}
+.toggle input:checked+.toggle-slider:before{transform:translateX(18px)}
+.task-editor{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px}
+.task-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.task-row:last-child{margin-bottom:0}
+.inp-task{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:12px;outline:none;flex:1;min-width:100px;font-family:system-ui}
+.inp-task:focus{border-color:var(--accent)}
+.inp-task::placeholder{color:var(--muted)}
+.req-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px}
+.req-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.req-addr{font-size:10px;color:var(--accent);word-break:break-all;background:var(--surface);padding:6px 10px;border-radius:8px;margin-bottom:8px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:24px;width:100%;max-width:420px}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:16px}
+.modal-inp{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-size:14px;outline:none;font-family:system-ui;margin-bottom:10px;transition:.2s}
+.modal-inp:focus{border-color:var(--accent)}
+.modal-inp::placeholder{color:var(--muted)}
+.modal-btns{display:flex;gap:8px;margin-top:12px}
+textarea.modal-inp{height:90px;resize:vertical}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--green);color:#062015;padding:11px 20px;border-radius:30px;font-weight:700;font-size:12px;opacity:0;transition:.3s;z-index:999;pointer-events:none}
+.toast.show{opacity:1}
+.toast.err{background:var(--red);color:#fff}
+.bc-wrap{max-width:580px}
+.bc-info{background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.2);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--sub);margin-top:12px}
+.sb-toggle{display:none;position:fixed;top:14px;left:14px;z-index:200;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 11px;cursor:pointer;font-size:16px}
+/* Leaderboard medals */
+.rank-gold{color:#FFD700;font-size:18px}
+.rank-silver{color:#C0C0C0;font-size:18px}
+.rank-bronze{color:#CD7F32;font-size:18px}
+/* Export btn */
+.export-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+/* Filter select */
+.filter-sel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12px;outline:none;font-family:system-ui}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);transition:.3s}.sidebar.open{transform:translateX(0)}
+  .main{margin-left:0;padding:14px;padding-top:56px}
+  .sb-toggle{display:block}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .settings-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="login-wrap" id="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">Money<span>Plu$</span></div>
+    <div class="login-sub">🔐 Admin Panel</div>
+    <input class="login-inp" id="login-id" type="number" placeholder="Telegram ID"/>
+    <input class="login-inp" id="login-pass" type="password" placeholder="Password"/>
+    <button class="login-btn" onclick="doLogin()">Login</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="app" id="app">
+  <button class="sb-toggle" onclick="toggleSidebar()">☰</button>
+
+  <div class="sidebar" id="sidebar">
+    <div class="sb-logo">Money<span>Plu$</span> Admin</div>
+    <div class="sb-section">Main</div>
+    <div class="sb-item on" id="nav-dashboard" onclick="showPage('dashboard',this)"><span class="sb-icon">📊</span> Dashboard</div>
+    <div class="sb-item" id="nav-users" onclick="showPage('users',this)"><span class="sb-icon">👥</span> Users</div>
+    <div class="sb-item" id="nav-leaderboard" onclick="showPage('leaderboard',this)"><span class="sb-icon">🏆</span> Leaderboard</div>
+    <div class="sb-item" id="nav-withdrawals" onclick="showPage('withdrawals',this)"><span class="sb-icon">💸</span> Withdrawals</div>
+    <div class="sb-section">Config</div>
+    <div class="sb-item" id="nav-rewards" onclick="showPage('rewards',this)"><span class="sb-icon">💰</span> Rewards</div>
+    <div class="sb-item" id="nav-tasks" onclick="showPage('tasks',this)"><span class="sb-icon">✅</span> Tasks</div>
+    <div class="sb-item" id="nav-broadcast" onclick="showPage('broadcast',this)"><span class="sb-icon">📢</span> Broadcast</div>
+    <div class="sb-section">Account</div>
+    <div class="sb-item" onclick="doLogout()"><span class="sb-icon">🚪</span> Logout</div>
+  </div>
+
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page on" id="page-dashboard">
+      <div class="page-title">📊 Dashboard</div>
+      <div class="page-sub">Live overview — <span id="dash-time"></span></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-card-lbl">Total Users</div><div class="stat-card-val a" id="st-users">—</div></div>
+        <div class="stat-card"><div class="stat-card-lbl">Total Balance Owed</div><div class="stat-card-val g">$<span id="st-balance">—</span></div></div>
+        <div class="stat-card"><div class="stat-card-lbl">Active Today</div><div class="stat-card-val a" id="st-active">—</div></div>
+        <div class="stat-card"><div class="stat-card-lbl">Pending Withdrawals</div><div class="stat-card-val gold" id="st-pending">—</div></div>
+        <div class="stat-card"><div class="stat-card-lbl">Total Ads Watched</div><div class="stat-card-val a" id="st-ads">—</div></div>
+        <div class="stat-card"><div class="stat-card-lbl">Total Invites</div><div class="stat-card-val gold" id="st-invites">—</div></div>
+        <div class="stat-card"><div class="stat-card-lbl">Blocked Users</div><div class="stat-card-val r" id="st-blocked">—</div></div>
+        <div class="stat-card"><div class="stat-card-lbl">Total Paid Out</div><div class="stat-card-val g">$<span id="st-paid">—</span></div></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-head">
+          <div class="table-title">Top 10 Users by Balance</div>
+          <button class="btn btn-primary btn-sm" onclick="loadDashboard()">🔄 Refresh</button>
+        </div>
+        <div class="tbl-scroll">
+          <table><thead><tr><th>#</th><th>User ID</th><th>Balance</th><th>Ads</th><th>Invites</th><th>Status</th></tr></thead>
+          <tbody id="dash-tbody"><tr><td colspan="6" style="text-align:center;padding:16px;color:var(--muted)">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="page" id="page-users">
+      <div class="page-title">👥 Users</div>
+      <div class="page-sub">Manage all users — sorted by balance (highest first)</div>
+      <div class="export-bar">
+        <select class="filter-sel" id="user-filter" onchange="filterUsers()">
+          <option value="all">All Users</option>
+          <option value="active">Active Today</option>
+          <option value="blocked">Blocked</option>
+          <option value="rich">Balance > $5</option>
+          <option value="noads">No Ads Yet</option>
+        </select>
+        <button class="btn btn-purple btn-sm" onclick="exportCSV()">📥 Export CSV</button>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input id="bulk-amt" type="number" step="0.01" placeholder="$0.00" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:5px 9px;color:var(--text);font-size:11px;width:80px;outline:none"/>
+          <button class="btn btn-success btn-sm" onclick="bulkAdd()">➕ Add to All</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-head">
+          <div class="table-title">All Users</div>
+          <input class="search-inp" id="user-search" placeholder="🔍 Search ID…" oninput="filterUsers()"/>
+        </div>
+        <div class="tbl-scroll">
+          <table><thead><tr>
+            <th>Rank</th><th>User ID</th><th>Balance</th><th>Ads</th><th>Invites</th><th>Earned</th><th>Status</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="users-tbody"><tr><td colspan="8" style="text-align:center;padding:16px;color:var(--muted)">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div class="page" id="page-leaderboard">
+      <div class="page-title">🏆 Leaderboard</div>
+      <div class="page-sub">Top users ranked by balance</div>
+      <div class="table-wrap">
+        <div class="table-head">
+          <div class="table-title">Top Users</div>
+          <button class="btn btn-primary btn-sm" onclick="loadLeaderboard()">🔄 Refresh</button>
+        </div>
+        <div class="tbl-scroll">
+          <table><thead><tr><th>Rank</th><th>User ID</th><th>Balance</th><th>Ads Watched</th><th>Invites</th><th>Invite Earned</th></tr></thead>
+          <tbody id="leader-tbody"><tr><td colspan="6" style="text-align:center;padding:16px;color:var(--muted)">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- WITHDRAWALS -->
+    <div class="page" id="page-withdrawals">
+      <div class="page-title">💸 Withdrawals</div>
+      <div class="page-sub">Review and process withdrawal requests</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="loadWithdrawals('all')">All</button>
+        <button class="btn btn-warning btn-sm" onclick="loadWithdrawals('pending')">⏳ Pending</button>
+        <button class="btn btn-success btn-sm" onclick="loadWithdrawals('approved')">✅ Approved</button>
+        <button class="btn btn-danger btn-sm" onclick="loadWithdrawals('rejected')">❌ Rejected</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;padding:10px 14px;background:rgba(31,203,160,.06);border:1px solid rgba(31,203,160,.15);border-radius:12px">
+        <span style="font-size:12px;color:var(--sub);align-self:center">Bulk Actions:</span>
+        <button class="btn btn-success btn-sm" onclick="bulkWithdraw('approved')">✅ Approve All Pending</button>
+        <button class="btn btn-danger btn-sm" onclick="bulkWithdraw('rejected')">❌ Reject All Pending</button>
+      </div>
+      <div id="withdrawals-list"><div style="color:var(--muted);padding:16px">Loading…</div></div>
+    </div>
+
+    <!-- REWARDS -->
+    <div class="page" id="page-rewards">
+      <div class="page-title">💰 Reward Settings</div>
+      <div class="page-sub">Change earning amounts — saved to Firebase</div>
+      <div class="settings-grid">
+        <div class="set-card">
+          <div class="set-card-title">📺 Ads</div>
+          <div class="set-row"><div class="set-lbl">Per Ad Reward ($)</div><input class="inp-inline" id="r-ad" type="number" step="0.01" value="0.20"/></div>
+          <div class="set-row"><div class="set-lbl">Max Ads Per Day</div><input class="inp-inline" id="r-maxads" type="number" value="15"/></div>
+        </div>
+        <div class="set-card">
+          <div class="set-card-title">👥 Invite</div>
+          <div class="set-row"><div class="set-lbl">Per Invite ($)</div><input class="inp-inline" id="r-invite" type="number" step="0.01" value="0.40"/></div>
+        </div>
+        <div class="set-card">
+          <div class="set-card-title">✅ Tasks</div>
+          <div class="set-row"><div class="set-lbl">Per Task ($)</div><input class="inp-inline" id="r-task" type="number" step="0.01" value="0.05"/></div>
+        </div>
+        <div class="set-card">
+          <div class="set-card-title">💸 Withdrawal</div>
+          <div class="set-row"><div class="set-lbl">Min Withdrawal ($)</div><input class="inp-inline" id="r-minwd" type="number" value="15"/></div>
+        </div>
+      </div>
+      <button class="btn btn-success" style="margin-top:14px" onclick="saveRewards()">💾 Save All Rewards</button>
+    </div>
+
+    <!-- TASKS -->
+    <div class="page" id="page-tasks">
+      <div class="page-title">✅ Task Manager</div>
+      <div class="page-sub">Add, edit or remove tasks shown to users</div>
+      <div id="tasks-list"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-primary" onclick="addTaskUI()">➕ Add Task</button>
+        <button class="btn btn-success" onclick="saveTasks()">💾 Save Tasks</button>
+      </div>
+    </div>
+
+    <!-- BROADCAST -->
+    <div class="page" id="page-broadcast">
+      <div class="page-title">📢 Broadcast</div>
+      <div class="page-sub">Send messages to users via Telegram</div>
+      <div class="bc-wrap">
+        <div class="set-card" style="margin-bottom:12px">
+          <div class="set-card-title">🤖 Bot Token</div>
+          <input class="modal-inp" id="bc-token" type="password" placeholder="Paste bot token (never stored)"/>
+        </div>
+        <div class="set-card" style="margin-bottom:12px">
+          <div class="set-card-title">🎯 Target</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+            <button class="btn btn-primary btn-sm" id="bct-all" onclick="setBcTarget('all')">👥 All</button>
+            <button class="btn btn-ghost btn-sm" id="bct-rich" onclick="setBcTarget('rich')">💰 Balance>$5</button>
+            <button class="btn btn-ghost btn-sm" id="bct-new" onclick="setBcTarget('new')">🆕 No Ads</button>
+            <button class="btn btn-ghost btn-sm" id="bct-active" onclick="setBcTarget('active')">⚡ Active Today</button>
+          </div>
+          <div style="font-size:12px;color:var(--sub)">Target: <span id="bc-count" style="color:var(--accent);font-weight:700">—</span> users</div>
+        </div>
+        <div class="set-card" style="margin-bottom:12px">
+          <div class="set-card-title">🖼️ Photo (optional)</div>
+          <input class="modal-inp" id="bc-photo" placeholder="Photo URL (https://...) or leave empty"/>
+          <div style="font-size:11px;color:var(--muted)">Direct image link (jpg/png). Leave empty for text-only.</div>
+        </div>
+        <div class="set-card" style="margin-bottom:12px">
+          <div class="set-card-title">✉️ Message</div>
+          <textarea class="modal-inp" id="bc-msg" placeholder="💰 Hello! New update in MoneyPlu$...&#10;&#10;Supports HTML: &lt;b&gt;bold&lt;/b&gt; &lt;i&gt;italic&lt;/i&gt;"></textarea>
+        </div>
+        <div class="set-card" style="margin-bottom:12px">
+          <div class="set-card-title">🔘 Inline Buttons (optional)</div>
+          <div style="font-size:11px;color:var(--sub);margin-bottom:8px">One button per line: <code style="color:var(--accent)">Button Text | https://url.com</code></div>
+          <textarea class="modal-inp" id="bc-buttons" placeholder="💰 Open App | https://t.me/Money_Plus12_Bot/moneyplus&#10;📢 Join Channel | https://t.me/AFG_DING2025" style="height:80px"></textarea>
+        </div>
+        <div class="set-card">
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn btn-primary" onclick="sendBroadcast()">🚀 Send to All</button>
+            <button class="btn btn-ghost btn-sm" onclick="previewBroadcast()">👁️ Preview</button>
+            <span id="bc-status" style="font-size:12px;color:var(--sub)"></span>
+          </div>
+          <div id="bc-preview" style="margin-top:12px;display:none;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:13px"></div>
+        </div>
+        <div class="bc-info">⚠️ Token is used only in your browser and never stored. Users must have started the bot.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal-overlay" id="modal-user">
+  <div class="modal">
+    <div class="modal-title">✏️ Edit User — <span id="edit-uid" style="color:var(--accent);font-size:14px"></span></div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px">BALANCE ($)</div>
+    <input class="modal-inp" id="edit-balance" type="number" step="0.01"/>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px">ADS WATCHED</div>
+    <input class="modal-inp" id="edit-ads" type="number"/>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px">INVITE COUNT</div>
+    <input class="modal-inp" id="edit-invites" type="number"/>
+    <div class="modal-btns">
+      <button class="btn btn-success" onclick="saveUser()">💾 Save</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-user')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════
+// CONFIG — رمز را عوض کن!
+// ═══════════════════════════════════
+const ADMIN_ID = "5206091997";
+// رمز را از localStorage بخوان یا پیش‌فرض استفاده کن
+function getAdminPass() {
+  return localStorage.getItem("mp_admin_pass") || "CHANGE_THIS_PASSWORD";
+}
+
+let allUsers = {}, allTasks = [], editingUid = null, bcTarget = "all", bcTargetUsers = [];
+
+// ═══════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════
+function doLogin() {
+  const id   = document.getElementById("login-id").value.trim();
+  const pass = document.getElementById("login-pass").value.trim();
+  if (id === ADMIN_ID && pass === getAdminPass()) {
+    document.getElementById("login-wrap").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    if (window._firebaseReady) initAdmin();
+    else document.addEventListener("firebaseReady", initAdmin);
+  } else {
+    document.getElementById("login-err").textContent = "❌ Wrong ID or password!";
+  }
+}
+document.getElementById("login-pass").addEventListener("keydown", e => { if(e.key==="Enter") doLogin(); });
+document.getElementById("login-id").addEventListener("keydown",  e => { if(e.key==="Enter") doLogin(); });
+
+function doLogout() {
+  document.getElementById("app").style.display = "none";
+  document.getElementById("login-wrap").style.display = "flex";
+  document.getElementById("login-pass").value = "";
+}
+
+function initAdmin() {
+  loadDashboard();
+  loadRewards();
+  loadTasks();
+}
+
+// ═══════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════
+function showPage(name, el) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("on"));
+  document.querySelectorAll(".sb-item").forEach(i => i.classList.remove("on"));
+  document.getElementById("page-"+name).classList.add("on");
+  if(el) el.classList.add("on");
+  document.getElementById("sidebar").classList.remove("open");
+  if(name==="users")        loadUsers();
+  if(name==="leaderboard")  loadLeaderboard();
+  if(name==="withdrawals")  loadWithdrawals("all");
+}
+function toggleSidebar() { document.getElementById("sidebar").classList.toggle("open"); }
+
+// ═══════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════
+async function loadDashboard() {
+  document.getElementById("dash-time").textContent = new Date().toLocaleTimeString();
+  const snap = await window._dbGet(window._dbRef(window._db,"users"));
+  if(!snap.exists()) return;
+  allUsers = snap.val();
+  const users = Object.entries(allUsers);
+  const today = new Date().toDateString();
+  let totalBal=0, active=0, blocked=0, totalAds=0, totalInv=0, paid=0, pending=0;
+
+  users.forEach(([,u]) => {
+    totalBal += u.balance||0;
+    if(u.adsTodayDate===today&&(u.adsToday||0)>0) active++;
+    if(u.blocked) blocked++;
+    totalAds += u.adsWatched||0;
+    totalInv += u.inviteCount||0;
+  });
+
+  try {
+    const ws = await window._dbGet(window._dbRef(window._db,"withdrawals"));
+    if(ws.exists()) Object.values(ws.val()).forEach(ur => Object.values(ur).forEach(r => {
+      if(r.status==="pending") pending++;
+      if(r.status==="approved"||r.status==="completed") paid+=r.amount||0;
+    }));
+  } catch(e){}
+
+  document.getElementById("st-users").textContent   = users.length;
+  document.getElementById("st-balance").textContent = totalBal.toFixed(2);
+  document.getElementById("st-active").textContent  = active;
+  document.getElementById("st-pending").textContent = pending;
+  document.getElementById("st-ads").textContent     = totalAds;
+  document.getElementById("st-invites").textContent = totalInv;
+  document.getElementById("st-blocked").textContent = blocked;
+  document.getElementById("st-paid").textContent    = paid.toFixed(2);
+
+  // Top 10 sorted by balance
+  const sorted = users.sort((a,b)=>(b[1].balance||0)-(a[1].balance||0)).slice(0,10);
+  const tbody = document.getElementById("dash-tbody");
+  tbody.innerHTML = "";
+  sorted.forEach(([uid,u],i) => {
+    const rank = i===0?"🥇":i===1?"🥈":i===2?"🥉":`#${i+1}`;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td style="font-size:16px">${rank}</td>
+      <td style="color:var(--accent);font-size:11px">${uid}</td>
+      <td style="color:var(--green);font-weight:700">$${(u.balance||0).toFixed(2)}</td>
+      <td>${u.adsWatched||0}</td>
+      <td>${u.inviteCount||0}</td>
+      <td>${u.blocked?'<span class="badge red">Blocked</span>':'<span class="badge green">Active</span>'}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ═══════════════════════════════════
+// LEADERBOARD
+// ═══════════════════════════════════
+async function loadLeaderboard() {
+  const snap = await window._dbGet(window._dbRef(window._db,"users"));
+  if(!snap.exists()) return;
+  allUsers = snap.val();
+  const sorted = Object.entries(allUsers)
+    .filter(([uid])=>!uid.startsWith("demo_"))
+    .sort((a,b)=>(b[1].balance||0)-(a[1].balance||0));
+
+  const tbody = document.getElementById("leader-tbody");
+  tbody.innerHTML = "";
+  sorted.forEach(([uid,u],i) => {
+    const rank = i===0?"🥇":i===1?"🥈":i===2?"🥉":`#${i+1}`;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td style="font-size:${i<3?18:14}px;font-weight:700">${rank}</td>
+      <td style="color:var(--accent);font-size:11px;font-weight:600">${uid}</td>
+      <td style="color:var(--green);font-weight:800;font-size:${i<3?15:13}px">$${(u.balance||0).toFixed(2)}</td>
+      <td>${u.adsWatched||0}</td>
+      <td>${u.inviteCount||0}</td>
+      <td style="color:var(--gold)">$${(u.inviteEarned||0).toFixed(2)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ═══════════════════════════════════
+// USERS
+// ═══════════════════════════════════
+async function loadUsers() {
+  const snap = await window._dbGet(window._dbRef(window._db,"users"));
+  if(snap.exists()) allUsers = snap.val();
+  filterUsers();
+}
+
+function filterUsers() {
+  const q = (document.getElementById("user-search")?.value||"").toLowerCase();
+  const f = document.getElementById("user-filter")?.value||"all";
+  const today = new Date().toDateString();
+  let entries = Object.entries(allUsers);
+  if(q) entries = entries.filter(([uid])=>uid.toLowerCase().includes(q));
+  if(f==="active") entries = entries.filter(([,u])=>u.adsTodayDate===today&&(u.adsToday||0)>0);
+  if(f==="blocked") entries = entries.filter(([,u])=>u.blocked);
+  if(f==="rich") entries = entries.filter(([,u])=>(u.balance||0)>5);
+  if(f==="noads") entries = entries.filter(([,u])=>!(u.adsWatched)||u.adsWatched===0);
+
+  // Sort by balance highest first
+  entries.sort((a,b)=>(b[1].balance||0)-(a[1].balance||0));
+
+  const tbody = document.getElementById("users-tbody");
+  tbody.innerHTML = "";
+  if(!entries.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--muted)">No users found</td></tr>';
+    return;
+  }
+  entries.forEach(([uid,u],i) => {
+    const rank = i===0?"🥇":i===1?"🥈":i===2?"🥉":`#${i+1}`;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td style="font-size:${i<3?16:13}px">${rank}</td>
+      <td style="color:var(--accent);font-size:11px;font-weight:600">${uid.startsWith("demo_")?'<span class="badge blue">demo</span> ':''} ${uid}</td>
+      <td style="color:var(--green);font-weight:700">$${(u.balance||0).toFixed(2)}</td>
+      <td>${u.adsWatched||0}</td>
+      <td>${u.inviteCount||0}</td>
+      <td style="color:var(--gold)">$${(u.inviteEarned||0).toFixed(2)}</td>
+      <td>${u.blocked?'<span class="badge red">🚫 Blocked</span>':'<span class="badge green">✅ Active</span>'}</td>
+      <td>
+        <div class="btn-row">
+          <button class="btn btn-primary btn-sm" onclick="openEditUser('${uid}')">✏️</button>
+          <button class="btn btn-sm ${u.blocked?'btn-success':'btn-danger'}" onclick="toggleBlock('${uid}',${!!u.blocked})">${u.blocked?'✅':'🚫'}</button>
+          <button class="btn btn-warning btn-sm" onclick="resetTasks('${uid}')">🔄</button>
+          <button class="btn btn-ghost btn-sm" onclick="zeroBalance('${uid}')">$0</button>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function openEditUser(uid) {
+  editingUid = uid;
+  const u = allUsers[uid];
+  document.getElementById("edit-uid").textContent = uid;
+  document.getElementById("edit-balance").value = u.balance||0;
+  document.getElementById("edit-ads").value = u.adsWatched||0;
+  document.getElementById("edit-invites").value = u.inviteCount||0;
+  document.getElementById("modal-user").classList.add("show");
+}
+
+async function saveUser() {
+  if(!editingUid) return;
+  const data = {
+    balance: parseFloat(document.getElementById("edit-balance").value)||0,
+    adsWatched: parseInt(document.getElementById("edit-ads").value)||0,
+    inviteCount: parseInt(document.getElementById("edit-invites").value)||0,
+  };
+  await window._dbUpd(window._dbRef(window._db,"users/"+editingUid), data);
+  Object.assign(allUsers[editingUid], data);
+  closeModal("modal-user");
+  filterUsers();
+  showToast("User updated ✅");
+}
+
+async function toggleBlock(uid, isBlocked) {
+  await window._dbUpd(window._dbRef(window._db,"users/"+uid), {blocked:!isBlocked});
+  allUsers[uid].blocked = !isBlocked;
+  filterUsers();
+  showToast(isBlocked?"Unblocked ✅":"Blocked 🚫");
+}
+
+async function resetTasks(uid) {
+  if(!confirm("Reset tasks for "+uid+"?")) return;
+  await window._dbUpd(window._dbRef(window._db,"users/"+uid), {tasks:{}});
+  showToast("Tasks reset ✅");
+}
+
+async function zeroBalance(uid) {
+  if(!confirm("Set balance to $0 for "+uid+"?")) return;
+  await window._dbUpd(window._dbRef(window._db,"users/"+uid), {balance:0});
+  allUsers[uid].balance = 0;
+  filterUsers();
+  showToast("Balance zeroed ✅");
+}
+
+async function bulkAdd() {
+  const amt = parseFloat(document.getElementById("bulk-amt").value);
+  if(!amt||amt<=0){showToast("Enter valid amount","err");return;}
+  if(!confirm("Add $"+amt+" to ALL real users?")) return;
+  let count=0;
+  for(const [uid,u] of Object.entries(allUsers)) {
+    if(uid.startsWith("demo_")) continue;
+    const nb = +((u.balance||0)+amt).toFixed(2);
+    await window._dbUpd(window._dbRef(window._db,"users/"+uid),{balance:nb});
+    allUsers[uid].balance = nb;
+    count++;
+  }
+  filterUsers();
+  showToast("Added $"+amt+" to "+count+" users ✅");
+}
+
+function exportCSV() {
+  const rows = [["Rank","UserID","Balance","AdsWatched","Invites","InviteEarned","Blocked"]];
+  Object.entries(allUsers)
+    .sort((a,b)=>(b[1].balance||0)-(a[1].balance||0))
+    .forEach(([uid,u],i) => {
+      rows.push([i+1,uid,(u.balance||0).toFixed(2),u.adsWatched||0,u.inviteCount||0,(u.inviteEarned||0).toFixed(2),u.blocked?"Yes":"No"]);
+    });
+  const csv = rows.map(r=>r.join(",")).join("\n");
+  const a = document.createElement("a");
+  a.href = "data:text/csv;charset=utf-8,"+encodeURIComponent(csv);
+  a.download = "users_"+new Date().toISOString().split("T")[0]+".csv";
+  a.click();
+  showToast("CSV exported ✅");
+}
+
+// ═══════════════════════════════════
+// WITHDRAWALS
+// ═══════════════════════════════════
+async function loadWithdrawals(filter="all") {
+  const wrap = document.getElementById("withdrawals-list");
+  wrap.innerHTML = '<div style="color:var(--muted);padding:16px">Loading…</div>';
+  const snap = await window._dbGet(window._dbRef(window._db,"withdrawals"));
+  if(!snap.exists()){wrap.innerHTML='<div style="color:var(--muted);padding:16px">No requests yet</div>';return;}
+  wrap.innerHTML = "";
+  let count=0;
+  Object.entries(snap.val()).forEach(([uid,reqs]) => {
+    Object.entries(reqs).forEach(([reqId,req]) => {
+      if(filter!=="all"&&req.status!==filter) return;
+      count++;
+      const div = document.createElement("div");
+      div.className = "req-card";
+      div.innerHTML = `
+        <div class="req-top">
+          <div style="font-weight:700">$${req.amount} <span style="font-size:11px;color:var(--sub)">${(req.method||"").toUpperCase()}</span></div>
+          <span class="badge ${req.status==="pending"?"gold":req.status==="approved"?"green":"red"}">${req.status}</span>
+        </div>
+        <div style="font-size:11px;color:var(--sub);margin-bottom:6px">User: <span style="color:var(--accent)">${uid}</span> · ${new Date(req.timestamp).toLocaleString()}</div>
+        <div class="req-addr">${req.address}</div>
+        ${req.status==="pending"?`
+        <div class="btn-row">
+          <button class="btn btn-success btn-sm" onclick="updateWd('${uid}','${reqId}','approved')">✅ Approve</button>
+          <button class="btn btn-danger btn-sm" onclick="updateWd('${uid}','${reqId}','rejected')">❌ Reject</button>
+        </div>`:""}`;
+      wrap.appendChild(div);
+    });
+  });
+  if(!count) wrap.innerHTML='<div style="color:var(--muted);padding:16px">No requests found</div>';
+}
+
+async function updateWd(uid,reqId,status) {
+  await window._dbUpd(window._dbRef(window._db,`withdrawals/${uid}/${reqId}`),{status});
+  showToast(status==="approved"?"Approved ✅":"Rejected ❌");
+  loadWithdrawals("all");
+}
+
+async function bulkWithdraw(status) {
+  const label = status==="approved"?"Approve ALL pending":"Reject ALL pending";
+  if(!confirm(label+" withdrawals?")) return;
+  const snap = await window._dbGet(window._dbRef(window._db,"withdrawals"));
+  if(!snap.exists()) return;
+  let count=0;
+  const updates = {};
+  Object.entries(snap.val()).forEach(([uid,reqs]) => {
+    Object.entries(reqs).forEach(([reqId,req]) => {
+      if(req.status==="pending") {
+        updates[`withdrawals/${uid}/${reqId}/status`] = status;
+        count++;
+      }
+    });
+  });
+  if(!count){showToast("No pending requests","err");return;}
+  // Apply all updates at once
+  for(const [path,val] of Object.entries(updates)) {
+    await window._dbUpd(window._dbRef(window._db, path.split('/').slice(0,-1).join('/')), {status:val});
+  }
+  showToast(`${status==="approved"?"Approved":"Rejected"} ${count} requests ✅`);
+  loadWithdrawals("all");
+}
+
+// ═══════════════════════════════════
+// REWARDS
+// ═══════════════════════════════════
+async function loadRewards() {
+  const snap = await window._dbGet(window._dbRef(window._db,"config/rewards"));
+  if(!snap.exists()) return;
+  const r = snap.val();
+  if(r.adReward!=null)   document.getElementById("r-ad").value=r.adReward;
+  if(r.maxAds!=null)     document.getElementById("r-maxads").value=r.maxAds;
+  if(r.invReward!=null)  document.getElementById("r-invite").value=r.invReward;
+  if(r.taskReward!=null) document.getElementById("r-task").value=r.taskReward;
+  if(r.minWd!=null)      document.getElementById("r-minwd").value=r.minWd;
+}
+
+async function saveRewards() {
+  await window._dbSet(window._dbRef(window._db,"config/rewards"),{
+    adReward:   parseFloat(document.getElementById("r-ad").value)||0.20,
+    maxAds:     parseInt(document.getElementById("r-maxads").value)||15,
+    invReward:  parseFloat(document.getElementById("r-invite").value)||0.40,
+    taskReward: parseFloat(document.getElementById("r-task").value)||0.05,
+    minWd:      parseFloat(document.getElementById("r-minwd").value)||15,
+  });
+  showToast("Rewards saved ✅");
+}
+
+// ═══════════════════════════════════
+// TASKS
+// ═══════════════════════════════════
+async function loadTasks() {
+  const snap = await window._dbGet(window._dbRef(window._db,"config/tasks"));
+  allTasks = snap.exists() ? snap.val() : [
+    {id:"ch1",name:"AFG DING 2025",url:"https://t.me/AFG_DING2025",reward:0.05,enabled:true,type:"channel"},
+    {id:"ch2",name:"AFG DING Receipt",url:"https://t.me/AFG_DING_RECEIPT",reward:0.05,enabled:true,type:"channel"},
+    {id:"bot",name:"AFGDING2025BOT",url:"https://t.me/AFGDING2025BOT",reward:0.05,enabled:true,type:"bot"},
+  ];
+  renderTasks();
+}
+
+function renderTasks() {
+  const list = document.getElementById("tasks-list");
+  list.innerHTML = "";
+  const arr = Array.isArray(allTasks)?allTasks:Object.values(allTasks);
+  arr.forEach((task,i) => {
+    const div = document.createElement("div");
+    div.className = "task-editor";
+    div.innerHTML = `
+      <div class="task-row">
+        <span style="font-size:11px;color:var(--muted);min-width:22px;font-weight:700">#${i+1}</span>
+        <input class="inp-task" id="tn-${i}" value="${task.name||""}" placeholder="Task name" oninput="allTasks[${i}].name=this.value"/>
+        <select class="inp-task" style="max-width:105px" onchange="allTasks[${i}].type=this.value">
+          <option value="channel" ${task.type==="channel"?"selected":""}>📢 Channel</option>
+          <option value="bot"     ${task.type==="bot"    ?"selected":""}>🤖 Bot</option>
+          <option value="website" ${task.type==="website"?"selected":""}>🌐 Web</option>
+        </select>
+      </div>
+      <div class="task-row">
+        <input class="inp-task" id="tu-${i}" value="${task.url||""}" placeholder="https://t.me/..." oninput="allTasks[${i}].url=this.value"/>
+        <input class="inp-task" id="tr-${i}" type="number" step="0.01" value="${task.reward||0.05}" style="max-width:70px" oninput="allTasks[${i}].reward=parseFloat(this.value)||0.05"/>
+      </div>
+      <div class="task-row" style="justify-content:space-between">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <label class="toggle"><input type="checkbox" ${task.enabled!==false?"checked":""} onchange="allTasks[${i}].enabled=this.checked;renderTasks()"/><span class="toggle-slider"></span></label>
+          <span style="font-size:12px;${task.enabled!==false?"color:var(--green)":"color:var(--muted)"}">${task.enabled!==false?"✅ Enabled":"⛔ Disabled"}</span>
+        </label>
+        <button class="btn btn-danger btn-sm" onclick="deleteTask(${i})">🗑️ Delete</button>
+      </div>`;
+    list.appendChild(div);
+  });
+}
+
+function addTaskUI() {
+  const arr = Array.isArray(allTasks)?allTasks:Object.values(allTasks);
+  arr.push({id:"task_"+Date.now(),name:"",url:"",reward:0.05,enabled:true,type:"channel"});
+  allTasks=arr; renderTasks();
+  setTimeout(()=>{const el=document.getElementById("tn-"+(arr.length-1));if(el)el.focus();},100);
+}
+
+function deleteTask(i) {
+  if(!confirm("Delete this task?")) return;
+  const arr=Array.isArray(allTasks)?allTasks:Object.values(allTasks);
+  arr.splice(i,1); allTasks=arr; renderTasks();
+}
+
+async function saveTasks() {
+  const arr=Array.isArray(allTasks)?allTasks:Object.values(allTasks);
+  arr.forEach((t,i)=>{
+    const n=document.getElementById("tn-"+i),u=document.getElementById("tu-"+i),r=document.getElementById("tr-"+i);
+    if(n)t.name=n.value.trim(); if(u)t.url=u.value.trim(); if(r)t.reward=parseFloat(r.value)||0.05;
+    if(!t.id) t.id="task_"+Date.now()+"_"+i;
+  });
+  if(arr.some(t=>!t.name||!t.url)){showToast("Fill all fields!","err");return;}
+  await window._dbSet(window._dbRef(window._db,"config/tasks"),arr);
+  showToast("Tasks saved ✅ Mini app updated!");
+}
+
+// ═══════════════════════════════════
+// BROADCAST
+// ═══════════════════════════════════
+function setBcTarget(t) {
+  bcTarget=t;
+  ["all","rich","new","active"].forEach(x=>document.getElementById("bct-"+x)?.classList.remove("btn-primary","btn-ghost"));
+  ["all","rich","new","active"].forEach(x=>document.getElementById("bct-"+x)?.classList.add(x===t?"btn-primary":"btn-ghost"));
+  calcBcTarget();
+}
+
+async function calcBcTarget() {
+  if(!Object.keys(allUsers).length){const s=await window._dbGet(window._dbRef(window._db,"users"));if(s.exists())allUsers=s.val();}
+  const today=new Date().toDateString();
+  let users=Object.entries(allUsers).filter(([uid])=>!uid.startsWith("demo_"));
+  if(bcTarget==="rich") users=users.filter(([,u])=>(u.balance||0)>5);
+  if(bcTarget==="new")  users=users.filter(([,u])=>!(u.adsWatched)||u.adsWatched===0);
+  if(bcTarget==="active") users=users.filter(([,u])=>u.adsTodayDate===today&&(u.adsToday||0)>0);
+  bcTargetUsers=users.map(([uid])=>uid);
+  document.getElementById("bc-count").textContent=bcTargetUsers.length;
+}
+
+function parseBcButtons() {
+  const raw = (document.getElementById("bc-buttons")?.value||"").trim();
+  if(!raw) return null;
+  const rows = raw.split("\n").map(line => {
+    const parts = line.split("|").map(p=>p.trim());
+    if(parts.length>=2 && parts[1].startsWith("http")) {
+      return [{text:parts[0], url:parts[1]}];
+    }
+    return null;
+  }).filter(Boolean);
+  return rows.length ? {inline_keyboard:rows} : null;
+}
+
+function previewBroadcast() {
+  const msg = document.getElementById("bc-msg").value.trim();
+  const photo = document.getElementById("bc-photo")?.value.trim();
+  const raw = document.getElementById("bc-buttons")?.value.trim();
+  const prev = document.getElementById("bc-preview");
+  if(!msg){showToast("Enter message first","err");return;}
+
+  let html2 = "";
+  if(photo) html2 += `<div style="margin-bottom:8px"><img src="${photo}" style="max-width:100%;border-radius:8px;max-height:120px;object-fit:cover" onerror="this.style.display='none'"/></div>`;
+  html2 += `<div style="margin-bottom:8px">${msg.replace(/\n/g,'<br>')}</div>`;
+  if(raw) {
+    raw.split("\n").forEach(line => {
+      const parts = line.split("|").map(p=>p.trim());
+      if(parts.length>=2) html2 += `<div style="margin:3px 0"><a href="${parts[1]}" target="_blank" style="background:rgba(61,184,245,.15);border:1px solid rgba(61,184,245,.3);color:var(--accent);padding:6px 14px;border-radius:8px;text-decoration:none;font-size:12px;display:inline-block">${parts[0]}</a></div>`;
+    });
+  }
+  prev.innerHTML = html2;
+  prev.style.display = "block";
+}
+
+async function sendBroadcast() {
+  const token=document.getElementById("bc-token").value.trim();
+  const msg=document.getElementById("bc-msg").value.trim();
+  const photo=document.getElementById("bc-photo")?.value.trim();
+  const status=document.getElementById("bc-status");
+  const keyboard=parseBcButtons();
+  if(!token){showToast("Enter bot token","err");return;}
+  if(!msg){showToast("Enter message","err");return;}
+  if(!bcTargetUsers.length) await calcBcTarget();
+  if(!bcTargetUsers.length){showToast("No users","err");return;}
+  status.textContent="Sending…";
+  let sent=0,failed=0;
+  for(const uid of bcTargetUsers){
+    try{
+      let endpoint, body;
+      if(photo) {
+        // Send photo with caption
+        endpoint = "sendPhoto";
+        body = {chat_id:uid, photo:photo, caption:msg, parse_mode:"HTML"};
+      } else {
+        endpoint = "sendMessage";
+        body = {chat_id:uid, text:msg, parse_mode:"HTML"};
+      }
+      if(keyboard) body.reply_markup = keyboard;
+      const res=await fetch(`https://api.telegram.org/bot${token}/${endpoint}`,{
+        method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)
+      });
+      const d=await res.json(); if(d.ok)sent++; else failed++;
+    }catch(e){failed++;}
+    status.textContent=`Sent:${sent} Failed:${failed}`;
+    await new Promise(r=>setTimeout(r,50));
+  }
+  showToast(`Done! Sent:${sent} Failed:${failed}`);
+}
+
+// ═══════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════
+function closeModal(id){document.getElementById(id).classList.remove("show")}
+document.getElementById("modal-user").addEventListener("click",function(e){if(e.target===this)closeModal("modal-user")});
+
+function showToast(msg,type=""){
+  const el=document.getElementById("toast");
+  el.textContent=msg;
+  el.className="toast show"+(type==="err"?" err":"");
+  setTimeout(()=>el.classList.remove("show"),3000);
+}
+
+// Init
+setBcTarget("all");
+</script>
+</body>
+</html>
